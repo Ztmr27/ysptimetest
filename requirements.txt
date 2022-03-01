@@ -1,0 +1,6 @@
+opencv-python
+numpy
+beautifulsoup4
+uiautomator2
+facebook-wda
+loguru
