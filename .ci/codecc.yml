@@ -1,0 +1,33 @@
+version: v2.0
+ 
+resources:
+  repositories:
+    - repository: ci_templates/public/codecc
+      name: codecc
+ 
+stages:
+  - name: "stage1"
+    check-out: # stage准出
+      gates: # 声明质量红线
+        - template: commonGate.yml@codecc
+    jobs:
+      job1:
+        runs-on:
+          pool-name: docker
+        steps:
+          - checkout: self
+          - uses: CodeccCheckAtomDebug@4.*
+            name: 腾讯代码分析
+            with:
+              beAutoLang: "true" # 自动检测项目语言
+              checkerSetType: "openScan" # 按公司内部开源治理要求进行扫描
+              toolScanType: "1" # 扫描方式, 0是全量扫描，1是快速全量扫描
+              rtxReceiverType: "2" # 接收人, 默认: 1, single, options: 4[遗留问题处理人] | 0[所有人员] | 1[仅管理员] | 2[自定义] | 3[无（不发送）]
+              rtxReceiverList:  # 自定义接收人, 默认: [], 当 [rtxReceiverType] = [2] 时必选
+                - "ssfanli"
+                - ${{ ci.commit_author }}
+              customPath: # 黑名单, 设置后不扫描黑名单中路径，例如.*/tirdParty/.*
+                - ".*/PerfDogService/.*"
+                - ".*/WebDriverAgent/.*"
+                - ".*/HTMLTestRunner.py"
+                - ".*/archive/.*"
