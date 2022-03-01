@@ -1,6 +1,6 @@
 # YSPTimeConsuming
 
-![stream](https://stream.woa.com/pipeline/stream/api/external/stream/projects/278089/pipelines/badge?file_path=.ci/codecc.yml&branch=feature/updatedevice)
+![stream](https://stream.woa.com/pipeline/stream/api/external/stream/projects/838828/pipelines/badge?file_path=.ci/codecc.yml&branch=master)
 
 ## 概述
 * 央视频双端耗时类测试全自动化实践
