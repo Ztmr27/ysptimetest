@@ -264,5 +264,3 @@ if __name__ == '__main__':
     # bh = BossHelper('ios', 'FE7D77FC-2A91-4A88-AE4C-9A4B2D454C4D')
     r = bh.get_data(page_size=1, keyword='app_launch_time', conversion=True)
     bh.data_analysis(r)
-
-

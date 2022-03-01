@@ -34,4 +34,3 @@ def cut(
             os.system(cmd)
         return wrapper
     return decorator
-
