@@ -167,7 +167,7 @@ class BaseOperateIOS(object):
 
     def ele_text(self, **loc):
         ret = self.se(**loc).get(timeout=5)
-        logger.debug(f'ele_text: {loc}, {ret}')
+        logger.debug(f'ele_text: {loc}, text: {ret.text}')
         return ret.text
 
     def is_visible(self, timeout: float = 1.0, **loc):
@@ -207,7 +207,7 @@ class BaseOperateIOS(object):
             logger.debug('%ss ...' % (t - i))
             time.sleep(1)
 
-    def idfv(self):
+    def get_idfv(self):
 
         def _enter_about():
             self.switch_to('我的')
@@ -230,7 +230,6 @@ class BaseOperateIOS(object):
             if count > 20:
                 raise
         txt = self.ele_text(labelContains='IDFV')
-        logger.debug(f'text content: {txt}')
         txt_list = txt.split()
         if txt and txt_list:
             return txt_list[-1]
@@ -379,7 +378,7 @@ class BaseOperateAND(object):
 
 if __name__ == '__main__':
     boi = BaseOperateIOS('00008020-001D1D900CB9002E')
-    print(boi.idfv())
+    print(boi.get_idfv())
     # boa = BaseOperateAND('XPL0219C18016526')
     # ud = UIDriver('ios', '00008020-001D1D900CB9002E')
     pass
