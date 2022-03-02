@@ -6,6 +6,7 @@ import time
 import uiautomator2 as u2
 from loguru import logger
 
+from utils.const import *
 
 WHITELIST = {'跳过', '允许', '始终允许', '关闭', '同意', '以后', '再想想', '稍后', '稍后提醒我', '暂不升级', '取消', '好'}
 BUTTON_CLASSNAME = {'className': 'XCUIElementTypeButton'}
@@ -14,18 +15,23 @@ TEXTFIELD_CLASSNAME = {'className': 'XCUIElementTypeTextField'}
 ALERT_CLASSNAME = {'className': 'XCUIElementTypeAlert'}
 
 
+# TODO:
+#  1. init和BaseOperate拆开，init继承BaseOperate
+#  2. 双端BaseOperate应该合并，参考loginhelper
+#  3. 定位和代码分离，参考anduiauto
 class BaseOperateIOS(object):
 
-    def __init__(self, udid: str, bundle_id: str = 'com.cctv.yangshipin.app.iphone'):
+    def __init__(self, udid: str, bundle_id: str = PACKAGE.YSP_IOS):
         # 因为不会有多设备运行，直接读取文件
         self.udid = udid
         self.bundle_id = bundle_id
         self.init_ok_flag_loc = {'label': '时事', **STATIC_TEXT_CLASSNAME, 'visible': True}
-        self.client = wda.USBClient(self.udid)
-        self.se = self.client.session(self.bundle_id)
-        logger.debug(
-            'Init WDA client session is success\nbundle_id: %s\nport: %s ' % (self.bundle_id, 8100))
-        self.init_app()
+        self.client = wda.USBClient(self.udid, wda_bundle_id='.xctrunner')
+        self.se = self.client
+        # self.se = self.client.session(self.bundle_id)
+        # logger.debug(
+        #     'Init WDA client session is success\nbundle_id: %s\nport: %s ' % (self.bundle_id, 8100))
+        # self.init_app()
 
     def start_ysp(self):
         self.client.app_start(self.bundle_id)
@@ -44,12 +50,12 @@ class BaseOperateIOS(object):
             black_name = WHITELIST
         for name in black_name:
             if self.ele_exist(label=name, visible=True):
-                self.to_click_pro(label=name)
+                self.to_click(label=name)
 
     def _ad_skip(self):
         skip_loc = {'labelContains': '跳过'}
         if self.ele_exist(**skip_loc):
-            self.to_click_pro(**skip_loc)
+            self.to_click(**skip_loc)
 
     def _process_guide(self, guide_flag: dict, repeat=10, wait: int = 1):
         count = 0
@@ -64,7 +70,7 @@ class BaseOperateIOS(object):
             if count >= repeat:
                 raise Exception('init_app error, exceeding limit!')
             else:
-                self.to_click_pro(**guide_flag)
+                self.to_click(**guide_flag)
                 logger.debug('_process_guide success')
                 time.sleep(2)
 
@@ -79,7 +85,7 @@ class BaseOperateIOS(object):
         home_flag_invisible_loc = {'label': '首页', **BUTTON_CLASSNAME}
         tmp = self.is_visible(timeout=0.5, **home_flag_invisible_loc)
         if tmp is not None and not tmp:
-            self.to_click_pro(**home_flag_invisible_loc)
+            self.to_click(**home_flag_invisible_loc)
             time.sleep(1)
 
     def init_app(self, flag: dict = None, guide_flag='newuser guide start', repeat=20, delay: int = 1):
@@ -100,9 +106,9 @@ class BaseOperateIOS(object):
             if count >= repeat:
                 raise Exception('init_app error, exceeding limit!')
             else:
-                logger.debug('init app success')
+                logger.info('init app success')
 
-    def to_click_pro(self, elements: list = None, **loc):
+    def to_click(self, elements: list = None, **loc):
         """to click pro wrapper
 
         elements, retry element list
@@ -127,7 +133,7 @@ class BaseOperateIOS(object):
         """switch to any tab when in any page
         """
         if self.auto_back:
-            self.to_click_pro(label=tab)
+            self.to_click(label=tab)
             time.sleep(1)
         else:
             raise Exception('auto_back error')
@@ -148,7 +154,7 @@ class BaseOperateIOS(object):
         else:
             for btn in back_btn:
                 if self.ele_exist(labelContains=btn):
-                    self.to_click_pro(labelContains=btn)
+                    self.to_click(labelContains=btn)
                     time.sleep(.5)
                     return self.auto_back
             self.se.swipe_right()
@@ -158,6 +164,11 @@ class BaseOperateIOS(object):
         res = self.se(**loc).exists
         logger.debug(f'ele_exist: {loc}, {res}')
         return res
+
+    def ele_text(self, **loc):
+        ret = self.se(**loc).get(timeout=5)
+        logger.debug(f'ele_text: {loc}, {ret}')
+        return ret.text
 
     def is_visible(self, timeout: float = 1.0, **loc):
         ret = self.se(**loc).get(timeout=timeout, raise_error=False)
@@ -196,12 +207,38 @@ class BaseOperateIOS(object):
             logger.debug('%ss ...' % (t - i))
             time.sleep(1)
 
+    def idfv(self):
+
+        def _enter_about():
+            self.switch_to('我的')
+            time.sleep(1)
+            for step in ['设置', '关于央视频']:
+                if not self.ele_exist(label=step):
+                    self.se.swipe_up()
+                    time.sleep(.5)
+                self.to_click(label=step)
+                time.sleep(1)
+
+        _enter_about()
+        assert self.ele_exist(label='关于央视频')
+        x, y, w, h = self.se(name='about_logo').get(timeout=5).bounds
+        count = 1
+        while not self.ele_exist(label='上传日志') and count <= 20:
+            self.se.click(x, y)
+            count += 1
+        else:
+            if count > 20:
+                raise
+        txt = self.ele_text(labelContains='IDFV')
+        logger.debug(f'text content: {txt}')
+        txt_list = txt.split()
+        if txt and txt_list:
+            return txt_list[-1]
+
 
 class BaseOperateAND(object):
 
-    swipe_target = dict(resourceId="com.cctv.yangshipin.app.androidp:id/swipe_target")
-
-    def __init__(self, package_name, device_id):
+    def __init__(self, device_id: str, package_name: str = PACKAGE.YSP_AND):
         """
         初始化
         :param package_name: 包名
@@ -269,8 +306,8 @@ class BaseOperateAND(object):
             count += 1
         else:
             if count > repeat:
-                raise Exception('init_app fail, exceed max times.')
-        logger.debug('App init Successfully ...')
+                raise Exception('init_app fail, exceed max times')
+        logger.info('init app success')
     
     def restart_app(self):
         """
@@ -341,4 +378,9 @@ class BaseOperateAND(object):
 
 
 if __name__ == '__main__':
+    boi = BaseOperateIOS('00008020-001D1D900CB9002E')
+    print(boi.idfv())
+    # boa = BaseOperateAND('XPL0219C18016526')
+    # ud = UIDriver('ios', '00008020-001D1D900CB9002E')
     pass
+
