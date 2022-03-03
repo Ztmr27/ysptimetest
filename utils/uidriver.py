@@ -19,6 +19,7 @@ ALERT_CLASSNAME = {'className': 'XCUIElementTypeAlert'}
 #  1. init和BaseOperate拆开，init继承BaseOperate
 #  2. 双端BaseOperate应该合并，参考loginhelper
 #  3. 定位和代码分离，参考anduiauto
+#  4. 初始化增加判断标志位？
 class BaseOperateIOS(object):
 
     def __init__(self, udid: str, bundle_id: str = PACKAGE.YSP_IOS):
