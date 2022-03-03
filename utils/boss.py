@@ -11,7 +11,7 @@ import requests as req
 from loguru import logger
 from bs4 import BeautifulSoup
 
-logger.add('../output/app_launch_time.log', format="{message}", filter="", level="INFO")
+# logger.add('../output/app_launch_time.log', format="{message}", filter="", level="INFO")
 
 BOSS_MAPPING = {'android': {'ftype': 'ui', 'appid': '1134692339'},
                 'ios': {'ftype': 'ifv', 'appid': '1203446657'}}
@@ -181,7 +181,7 @@ class BossHelper(object):
                         elif ad_type == 2:
                             launch_time_data_list_zd_ad.append(tmp)
                         else:
-                            raise
+                            logger.warning(f'ad_type: {ad_type}, error !')
                 elif os and str(os) == '2':
                     ad_type = udf_kv.get('ad_type')
                     launch_time = udf_kv.get('launch_time', 0)
@@ -260,7 +260,7 @@ if __name__ == '__main__':
     # mate9: imei 862005033754918, android id: 0bc9cdaaf3b48252
     # mate9pro imei 864682039607148
     # nova7 6a646c25d5b51854
-    bh = BossHelper('android', '6a646c25d5b51854')
+    bh = BossHelper('android', '55954f5f7306287a')
     # bh = BossHelper('ios', 'FE7D77FC-2A91-4A88-AE4C-9A4B2D454C4D')
-    r = bh.get_data(page_size=1, keyword='app_launch_time', conversion=True)
+    r = bh.get_data(page_size=3, keyword='app_launch_time', conversion=True)
     bh.data_analysis(r)

@@ -16,7 +16,7 @@ class PACKAGE(str, Enum):
 
 class COMMON:
     divide_id_mapping = {
-        'TEV0217315000851': '864682039607148',  # mate9pro
+        'TEV0217315000851': '55954f5f7306287a',  # mate9pro
         'UMX0220C23004116': '6a646c25d5b51854',  # nova 7
         'XPL0219C18016526': '',  # mate 30
         'TTNGK21603000006': '',  # honor 30 pro+

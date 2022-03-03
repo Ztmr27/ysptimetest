@@ -225,7 +225,7 @@ class BaseOperateIOS(object):
 
         def _get_idfv():
             assert self.ele_exist(label='关于央视频')
-            x, y, w, h = self.se(name='about_logo').get(timeout=5).bounds
+            x, y, w, h = self.se(labelContains='版本').get(timeout=5).bounds
             count = 1
             while not self.ele_exist(label='上传日志') and count <= 20:
                 self.se.click(x, y)
@@ -243,7 +243,19 @@ class BaseOperateIOS(object):
         idfv = _get_idfv()
         if close_app:
             self.close_app()
+            time.sleep(1)
         return idfv
+
+    def wait_for_appear(self, flag: str = '时事'):
+        count = 1
+        while not self.ele_exist(label=flag) and count <= 10:
+            time.sleep(1)
+            count += 1
+        else:
+            if count > 10:
+                logger.warning(f'flag: {flag} not appear')
+            else:
+                logger.debug(f'flag: {flag} appear')
 
 
 class BaseOperateAND(object):
@@ -385,6 +397,24 @@ class BaseOperateAND(object):
                 self.d(**name).click()
                 logger.debug(f'try to click {name}')
                 return
+
+    def wait_for_appear(self, flag: str = '时事'):
+        splash_container_loc = {'resourceId': 'com.cctv.yangshipin.app.androidp:id/splash_container'}
+        count = 1
+        while not self.ele_exist(text=flag) and count <= 10:
+            time.sleep(1)
+            count += 1
+        else:
+            if count > 10:
+                logger.warning(f'flag: {flag} not appear')
+            else:
+                if self.ele_exist(**splash_container_loc):
+                    count1 = 1
+                    while self.ele_exist(**splash_container_loc) and count1 <= 10:
+                        time.sleep(1)
+                        count1 += 1
+                logger.debug(f'flag: {flag} appear')
+
 
 
 if __name__ == '__main__':
