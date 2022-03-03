@@ -12,6 +12,7 @@ from loguru import logger
 from bs4 import BeautifulSoup
 
 # logger.add('../output/app_launch_time.log', format="{message}", filter="", level="INFO")
+from utils.tools import json_write
 
 BOSS_MAPPING = {'android': {'ftype': 'ui', 'appid': '1134692339'},
                 'ios': {'ftype': 'ifv', 'appid': '1203446657'}}
@@ -126,6 +127,11 @@ class BossHelper(object):
         return ret
 
     @staticmethod
+    def save_data(file_path, data_list):
+        json_write(file_path, data_list)
+        return file_path
+
+    @staticmethod
     def data_analysis(data_list: typing.List[dict]):
         data_list_asc = sorted(data_list, key=lambda x: x['time'])
         logger.debug(f'\ndata_list: {data_list}'
@@ -145,6 +151,7 @@ class BossHelper(object):
                 continue
             tmp = {'report_time': report_time}
             os = report_data.get('kv').get('os')
+            app_ver = report_data.get('kv').get('app_vr')
             udf_kv = report_data.get('kv').get('udf_kv')
             if udf_kv:
                 if os and str(os) == '1':
@@ -172,7 +179,8 @@ class BossHelper(object):
                                ad_load_time=ad_load_time,
                                request_adid_timeout=request_adid_timeout,
                                ad_load_timeout=ad_load_timeout,
-                               real_launch_time=real_launch_time)
+                               real_launch_time=real_launch_time,
+                               app_ver=app_ver)
                     if in_splash_overtime == '1':
                         launch_time_data_list_no_ad.append(tmp)
                     else:
@@ -197,7 +205,8 @@ class BossHelper(object):
                                launch_time=launch_time,
                                ad_load_time=ad_load_time,
                                ad_load_timeout=ad_load_timeout,
-                               real_launch_time=real_launch_time)
+                               real_launch_time=real_launch_time,
+                               app_ver=app_ver)
                     if not ad_type or ad_type == 0:
                         launch_time_data_list_no_ad.append(tmp)
                     else:
@@ -206,7 +215,7 @@ class BossHelper(object):
                         elif ad_type == 2:
                             launch_time_data_list_zd_ad.append(tmp)
                         else:
-                            raise
+                            logger.warning(f'ad_type: {ad_type}, error !')
 
         if not launch_time_data_list_zd_ad and not launch_time_data_list_no_ad:
             raise
@@ -214,25 +223,29 @@ class BossHelper(object):
         def calc_print(dl):
             if not dl:
                 return
+            app_vers = []
             report_times = []
             launch_times = []
             real_launch_times = []
             request_adid_times = []
             ad_load_times = []
             for launch_time_data in dl:
+                app_vers.append(launch_time_data.get('app_ver'))
                 report_times.append(launch_time_data.get('report_time'))
                 real_launch_times.append(launch_time_data.get('real_launch_time'))
                 launch_times.append(launch_time_data.get('launch_time'))
                 request_adid_times.append(launch_time_data.get('request_adid_time', 0))
                 ad_load_times.append(launch_time_data.get('ad_load_time'))
-            logger.info('%20s, %16s, %11s, %17s, %12s' %
-                        ('report_time', 'real_launch_time', 'launch_time', 'request_adid_time', 'ad_load_time'))
-            for report_time, real_launch_time, launch_time, request_adid_time, ad_load_time in zip(
-                    report_times, real_launch_times, launch_times, request_adid_times, ad_load_times):
-                logger.info('%20s, %16.2f, %11.2f, %17.2f, %12.2f' %
-                            (report_time, real_launch_time, launch_time, request_adid_time, ad_load_time))
-            logger.info('%20s, %16.2f, %11.2f, %17.2f, %12.2f' %
-                        ('average', avg(real_launch_times), avg(launch_times),
+            logger.info(
+                '%12s, %20s, %16s, %11s, %17s, %12s'
+                % ('app_ver', 'report_time', 'real_launch_time', 'launch_time', 'request_adid_time', 'ad_load_time')
+            )
+            for app_vers, report_time, real_launch_time, launch_time, request_adid_time, ad_load_time in zip(
+                    app_vers, report_times, real_launch_times, launch_times, request_adid_times, ad_load_times):
+                logger.info('%12s, %20s, %16.2f, %11.2f, %17.2f, %12.2f' %
+                            (app_vers, report_time, real_launch_time, launch_time, request_adid_time, ad_load_time))
+            logger.info('%12s, %20s, %16.2f, %11.2f, %17.2f, %12.2f' %
+                        ('app_vers', 'average', avg(real_launch_times), avg(launch_times),
                          avg(request_adid_times), avg(ad_load_times)))
 
         if launch_time_data_list_zd_ad:
@@ -260,7 +273,7 @@ if __name__ == '__main__':
     # mate9: imei 862005033754918, android id: 0bc9cdaaf3b48252
     # mate9pro imei 864682039607148
     # nova7 6a646c25d5b51854
-    bh = BossHelper('android', '55954f5f7306287a')
-    # bh = BossHelper('ios', 'FE7D77FC-2A91-4A88-AE4C-9A4B2D454C4D')
+    # bh = BossHelper('android', '55954f5f7306287a')
+    bh = BossHelper('ios', 'E4BB846D-39B8-4044-AF9E-DDD6A406E3E6')
     r = bh.get_data(page_size=3, keyword='app_launch_time', conversion=True)
     bh.data_analysis(r)

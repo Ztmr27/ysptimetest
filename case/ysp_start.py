@@ -69,6 +69,7 @@ class YSPStart(object):
         def after_test():
             data = self.bh.get_data(page_size=repeat, keyword='app_launch_time', conversion=True)
             self.bh.data_analysis(data)
+            self.bh.save_data(splice(self.base_dir, f'report_data.json'), data)
 
         def testing(video_fp):
 
@@ -99,7 +100,7 @@ class YSPStart(object):
 if __name__ == '__main__':
     # ysp = YSPStart('android', 'TEV0217315000851', '/Users/ssfanli/Desktop/YSP_v241.apk')
     # , '/Users/ssfanli/Desktop/cctvvideo-ios_2.4.2.66007_enterprise_sign.ipa'
-    ysp = YSPStart('ios', '00008110-001E54AC210A801E', '/Users/ssfanli/Desktop/cctvvideo-ios_2.4.2.66007_enterprise_sign.ipa')
+    ysp = YSPStart('ios', '00008020-001D1D900CB9002E')
     ysp.cold_start(3)
 
 
