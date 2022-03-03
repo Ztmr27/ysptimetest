@@ -28,11 +28,10 @@ class BaseOperateIOS(object):
         self.bundle_id = bundle_id
         self.init_ok_flag_loc = {'label': '时事', **STATIC_TEXT_CLASSNAME, 'visible': True}
         self.client = wda.USBClient(self.udid, wda_bundle_id='.xctrunner')
-        self.se = self.client
-        # self.se = self.client.session(self.bundle_id)
-        # logger.debug(
-        #     'Init WDA client session is success\nbundle_id: %s\nport: %s ' % (self.bundle_id, 8100))
-        # self.init_app()
+        self.se = self.client.session(self.bundle_id)
+        logger.debug(
+            'Init WDA client session is success\nbundle_id: %s\nport: %s ' % (self.bundle_id, 8100))
+        self.init_app()
 
     def start_ysp(self):
         self.client.app_start(self.bundle_id)
@@ -202,13 +201,17 @@ class BaseOperateIOS(object):
             self.se.app_stop(bid)
             time.sleep(1)
 
+    def close_app(self):
+        self.se.app_stop(self.bundle_id)
+        logger.debug('close_app ...')
+
     @staticmethod
     def timer(t: int):
         for i in range(t):
             logger.debug('%ss ...' % (t - i))
             time.sleep(1)
 
-    def get_idfv(self):
+    def get_idfv(self, close_app: bool = True):
 
         def _enter_about():
             self.switch_to('我的')
@@ -220,20 +223,27 @@ class BaseOperateIOS(object):
                 self.to_click(label=step)
                 time.sleep(1)
 
+        def _get_idfv():
+            assert self.ele_exist(label='关于央视频')
+            x, y, w, h = self.se(name='about_logo').get(timeout=5).bounds
+            count = 1
+            while not self.ele_exist(label='上传日志') and count <= 20:
+                self.se.click(x, y)
+                count += 1
+            else:
+                if count > 20:
+                    raise
+            txt = self.ele_text(labelContains='IDFV')
+            txt_list = txt.split()
+            if txt and txt_list:
+                return txt_list[txt_list.index('IDFV') + 1]
+            raise KeyError(f'text or text_list is null !')
+
         _enter_about()
-        assert self.ele_exist(label='关于央视频')
-        x, y, w, h = self.se(name='about_logo').get(timeout=5).bounds
-        count = 1
-        while not self.ele_exist(label='上传日志') and count <= 20:
-            self.se.click(x, y)
-            count += 1
-        else:
-            if count > 20:
-                raise
-        txt = self.ele_text(labelContains='IDFV')
-        txt_list = txt.split()
-        if txt and txt_list:
-            return txt_list[-1]
+        idfv = _get_idfv()
+        if close_app:
+            self.close_app()
+        return idfv
 
 
 class BaseOperateAND(object):
