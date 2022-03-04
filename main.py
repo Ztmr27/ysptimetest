@@ -22,7 +22,7 @@ def start_test(platform, device_id, test_app_path):
 
 def data_process(target_data_list, current_data_list):
     def calc(a, b):
-        res = b - a
+        res = round(b - a, 1)
         if res >= 0:
             return f'+{res}'
         return str(res)
@@ -105,14 +105,14 @@ if __name__ == '__main__':
     test_data['platform'] = args[0]
     sent_result(test_data)
 
-    # print(r)
-
-    # test_data = data_process(('2.4.1.51345', '/Users/ssfanli/Myfolder/myproj/python/ysptimetest/output/ysp/and/2.4.1.51345'), ('2.4.2.66011', '/Users/ssfanli/Myfolder/myproj/python/ysptimetest/output/ysp/and/2.4.2.66011'))
+    # test_data = data_process(
+    #     ('2.4.1.51345', '/Users/ssfanli/Myfolder/myproj/python/ysptimetest/output/ysp/and/2.4.1.51345'),
+    #     ('2.4.2.66011', '/Users/ssfanli/Myfolder/myproj/python/ysptimetest/output/ysp/and/2.4.2.66011'))
     # test_data['platform'] = 'android'
     # import pprint
     # pprint.pprint(test_data)
     # sent_result(test_data)
-    # sent_result()
+
     # , '/Users/ssfanli/Desktop/cctvvideo-ios_2.4.2.66007_enterprise_sign.ipa'
     # ysp = YSPStart('ios', '00008020-001D1D900CB9002E')
     # ysp.cold_start(3)
