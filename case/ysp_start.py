@@ -93,12 +93,14 @@ class YSPStart(object):
             return _start_in_ios()
 
         before_test()
-        video_dir = md(splice(self.base_dir, self.app_ver))
+        app_ver = self.app_ver
+        video_dir = md(splice(self.base_dir, app_ver))
         for _ in range(repeat):
             self.bo.close_app()
             testing(splice(video_dir, f'cold_start_{_ + 1}.mp4'))
             time.sleep(interval)
         after_test(video_dir)
+        return app_ver, video_dir
 
 
 if __name__ == '__main__':
