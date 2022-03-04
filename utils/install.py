@@ -2,6 +2,8 @@
 """Created by ssfanli on 2022/03/02 
 """
 import os
+import re
+
 from loguru import logger
 
 from utils.const import *
@@ -67,9 +69,29 @@ class Installer(object):
         else:
             logger.error(f'app: {package_name}, install fail, error: {res}')
 
+    def app_version(self, package_name):
+        assert self._is_install(package_name), f'need install app firstly !'
+        if self.plat == PLATFORM.AND:
+            cmd = f'adb -s {self.did} shell dumpsys package {package_name} | grep versionName'
+            res = self._exec(cmd)
+            return res[0].strip().split('=')[-1]
+        else:
+            cmd = f'tidevice -u {self.did} appinfo {package_name} ' \
+                  f'| grep -E "CFBundleShortVersionString|CFBundleVersion"'
+            res = self._exec(cmd)
+            assert len(res) == 2
+            part1, part2 = re.findall(r'\d+\.\d\.\d', res[0]), re.findall(r'\d+', res[1])
+            return '.'.join(part1 + part2)
+
 
 if __name__ == '__main__':
     # ins = Installer('ios', '00008020-001D1D900CB9002E')
-    ins = Installer('android', 'XPL0219C18016526')
+    ins = Installer('android', 'TEV0217315000851')
     # ins._is_install('com.cctv.yangshipin.app.androidp')
-    ins.install('~/Downloads/YSP_v241.apk', 'com.cctv.yangshipin.app.androidp')
+    # ins.install('~/Downloads/YSP_v241.apk', 'com.cctv.yangshipin.app.androidp')
+    # r = ins.app_version('com.cctv.yangshipin.app.iphone')
+    r = ins.app_version('com.cctv.yangshipin.app.androidp')
+    print(r)
+    # import re
+    # r = re.search(r'\d+\.\d\.\d', " 'CFBundleShortVersionString': '2.4.2',\n")
+    # print(r.group())

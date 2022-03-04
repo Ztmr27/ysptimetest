@@ -307,6 +307,7 @@ class BaseOperateAND(object):
         time.sleep(1)
         self._skip_homepage_ad()
         if self.d(**{'text': '首页'}).exists(timeout=3):
+            logger.info('init app success')
             return
         count = 1
         while self.d.app_current()['activity'] in app_current_page and count <= repeat:

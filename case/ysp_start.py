@@ -19,10 +19,10 @@ class YSPStart(object):
     def __init__(self, platform: str, device_id: str, app_path=None):
         self.plat = platform
         self.did = device_id
-        self.pkg_name = PACKAGE.YSP_AND if self.plat == PLATFORM.AND else PACKAGE.YSP_IOS
         self.app_path = app_path
-        self.base_dir = md(
-            abspath(splice('../output/ysp', 'and' if self.plat == PLATFORM.AND else 'ios')))
+        self.pkg_name = PACKAGE.YSP_AND if self.plat == PLATFORM.AND else PACKAGE.YSP_IOS
+        self.base_dir = md(abspath(splice('../output/ysp', 'and' if self.plat == PLATFORM.AND else 'ios')))
+        self.ins = Installer(self.plat, self.did)
         self.bo = None
         self.bh = None
 
@@ -38,13 +38,16 @@ class YSPStart(object):
             self.app_init()
         return self.bo.get_idfv()
 
+    @property
+    def app_ver(self):
+        return self.ins.app_version(self.pkg_name)
+
     def download(self, which, version):
         raise NotImplementedError
 
     def install(self):
         if self.app_path:
-            ins = Installer(self.plat, self.did)
-            ins.install(self.app_path, self.pkg_name)
+            self.ins.install(self.app_path, self.pkg_name)
 
     def app_init(self):
         if self.plat == PLATFORM.AND:
@@ -66,10 +69,10 @@ class YSPStart(object):
             self.app_init()
             self.boss_init()
 
-        def after_test():
+        def after_test(dir_path):
             data = self.bh.get_data(page_size=repeat, keyword='app_launch_time', conversion=True)
+            self.bh.save_data(splice(dir_path, f'report_data.json'), data)
             self.bh.data_analysis(data)
-            self.bh.save_data(splice(self.base_dir, f'report_data.json'), data)
 
         def testing(video_fp):
 
@@ -90,17 +93,19 @@ class YSPStart(object):
             return _start_in_ios()
 
         before_test()
+        video_dir = md(splice(self.base_dir, self.app_ver))
         for _ in range(repeat):
             self.bo.close_app()
-            testing(splice(self.base_dir, f'cold_start_{_ + 1}.mp4'))
+            testing(splice(video_dir, f'cold_start_{_ + 1}.mp4'))
             time.sleep(interval)
-        after_test()
+        after_test(video_dir)
 
 
 if __name__ == '__main__':
-    # ysp = YSPStart('android', 'TEV0217315000851', '/Users/ssfanli/Desktop/YSP_v241.apk')
+    # , '/Users/ssfanli/Desktop/YSP_v241.apk'
+    ysp = YSPStart('android', 'TEV0217315000851')
     # , '/Users/ssfanli/Desktop/cctvvideo-ios_2.4.2.66007_enterprise_sign.ipa'
-    ysp = YSPStart('ios', '00008020-001D1D900CB9002E')
+    # ysp = YSPStart('ios', '00008020-001D1D900CB9002E')
     ysp.cold_start(3)
 
 
